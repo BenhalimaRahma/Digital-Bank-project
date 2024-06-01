@@ -1,6 +1,8 @@
 package com.example.demo;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -11,6 +13,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.dtos.BankAccountDTO;
+import com.example.demo.dtos.CurrentBankAccountDTO;
+import com.example.demo.dtos.CustomerDTO;
+import com.example.demo.dtos.SavingBankAccountDTO;
 import com.example.demo.entities.AccountOperation;
 import com.example.demo.entities.BankAccount;
 import com.example.demo.entities.CurrentAccount;
@@ -18,9 +24,14 @@ import com.example.demo.entities.Customer;
 import com.example.demo.entities.SavingAccount;
 import com.example.demo.enums.AccountStatus;
 import com.example.demo.enums.OperationType;
+import com.example.demo.exceptions.BalanceNotSufficientException;
+import com.example.demo.exceptions.BankAccountNotFoundException;
+import com.example.demo.exceptions.CustomerNotFoundException;
 import com.example.demo.repositorys.AccountOperationRepository;
 import com.example.demo.repositorys.BankAccountRepository;
 import com.example.demo.repositorys.CustomerRepository;
+import com.example.demo.services.BankAccountService;
+import com.example.demo.services.BankService;
 
 
 @SpringBootApplication
@@ -31,27 +42,38 @@ public class DigitalBankBackendApplication {
 	}
 	@Bean
 	@Transactional // ces opérations s'éxécute em meme temps
-	CommandLineRunner commandLineRunner(BankAccountRepository bankAccountReposotory) {
+	CommandLineRunner commandLineRunner(BankAccountService bankAccountService) {
 			return args -> {
-				BankAccount bankAcount = bankAccountReposotory.findById("211b1d96-5a97-4232-96de-6e11730f9079").get();
-				if(bankAcount != null) {
-					System.out.println("********************************");
-					System.out.println(bankAcount.getId());
-					System.out.println(bankAcount.getBalance());
-					System.out.println(bankAcount.getStatus());
-					System.out.println(bankAcount.getCreatedAt());
-					if (bankAcount instanceof SavingAccount) {
-						System.out.println("Rate=>" + ((SavingAccount) bankAcount).getInterestRate());
-						
-					}else if(bankAcount instanceof CurrentAccount) {
-						System.out.println("Over Draft=>" + ((CurrentAccount) bankAcount).getOverDraft());
-					}
-					bankAcount.getAccountOperration().forEach(op ->{
-						System.out.println(op.getType() + "\t" + op.getOperationDate() + "\t" + op.getAmount());
-						
-					});
+				Stream.of("Khaled","Sofienne","Safa").forEach(name->{
+					CustomerDTO customer = new CustomerDTO();
+					customer.setName(name);
+					customer.setEmail(name+"gmail.com");
+					bankAccountService.saveCustomer(customer);
 					
+				});
+				bankAccountService.listCustomers().forEach(customer->{
+					try {
+						bankAccountService.saveCurrentBankAccount(Math.random()*9000, 9000,customer.getId());
+						bankAccountService.saveSavingBankAccount(Math.random()*120000,5.5, customer.getId());
+						
+					} catch (CustomerNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				});
+				List<BankAccountDTO> listBank = bankAccountService.bankAccountList();
+				for (BankAccountDTO bankAccount: listBank) {
+					for (int i=0; i<10; i++) {
+					String accountId;
+					if (bankAccount instanceof SavingBankAccountDTO)
+						accountId = ((SavingBankAccountDTO)bankAccount).getId();
+					else 
+						accountId = ((CurrentBankAccountDTO) bankAccount).getId();
+					bankAccountService.credit(accountId, 1000+Math.random()*120000, "credit");
+					bankAccountService.debit(accountId, 1000+Math.random()*9000, "debit");
+					}
 				}
+				
 			};
 	}
 	

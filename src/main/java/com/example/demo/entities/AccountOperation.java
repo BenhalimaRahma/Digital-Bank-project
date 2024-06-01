@@ -22,6 +22,7 @@ public class AccountOperation {
 	private Long id;
 	private Date operationDate;
 	private double amount;
+	private String description;
 	@Enumerated(EnumType.STRING)
 	private OperationType type;
 	@ManyToOne
@@ -31,6 +32,13 @@ public class AccountOperation {
 	}
 	public void setId(Long id) {
 		this.id = id;
+	}
+	
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	public Date getOperationDate() {
 		return operationDate;

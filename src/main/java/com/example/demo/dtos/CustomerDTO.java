@@ -1,4 +1,4 @@
-package com.example.demo.entities;
+package com.example.demo.dtos;
 
 import java.util.List;
 
@@ -14,16 +14,12 @@ import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-@Entity
+
 @Data @NoArgsConstructor @AllArgsConstructor
-public class Customer {
-	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class CustomerDTO {
 	private Long id;
 	private String name;
 	private String email;
-	@OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
-	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)//c'est pas la peine de sérialiser cette ligne
-	private List<BankAccount> bankAccounts;
 	public Long getId() {
 		return id;
 	}
@@ -42,12 +38,8 @@ public class Customer {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public List<BankAccount> getBankAccounts() {
-		return bankAccounts;
-	}
-	public void setBankAccounts(List<BankAccount> bankAccounts) {
-		this.bankAccounts = bankAccounts;
-	}
+	
+	
 	
 	
 }
